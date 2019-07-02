@@ -7,6 +7,7 @@ import com.example.lee.dcnyc18.db.PhotoDao
 import com.example.lee.dcnyc18.db.PhotoDataSource
 import com.example.lee.dcnyc18.network.UnsplashService
 import com.example.lee.dcnyc18.prefs.PrefsManager
+import com.example.lee.dcnyc18.util.DCNYDispatchers
 import com.lee.apps.vivir.di.MainActivityModule
 import dagger.Component
 import dagger.android.AndroidInjectionModule
@@ -40,4 +41,6 @@ interface AppComponent {
     fun unsplashService(): UnsplashService
 
     fun prefsManager(): PrefsManager
+
+    //fun dispatchers(): DCNYDispatchers
 }

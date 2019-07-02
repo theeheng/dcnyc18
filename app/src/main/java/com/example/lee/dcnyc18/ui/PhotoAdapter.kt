@@ -5,41 +5,47 @@ import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.example.lee.dcnyc18.R
+import com.example.lee.dcnyc18.util.DCNYDispatchers
 import com.example.lee.dcnyc18.models.Photo
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.schedulers.Schedulers
-import io.reactivex.Single
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlin.coroutines.CoroutineContext
 
 class PhotoAdapter(
-        private val photoCellIntentHandler: PhotoCellIntentHandler
-): RecyclerView.Adapter<PhotoViewHolder>() {
-    private lateinit var disposables: CompositeDisposable
+        private val photoCellIntentHandler: PhotoCellIntentHandler,
+        private val dispatchers: DCNYDispatchers = DCNYDispatchers()
+): RecyclerView.Adapter<PhotoViewHolder>(), CoroutineScope {
+    private lateinit var job: Job
+    override val coroutineContext: CoroutineContext
+        get() = dispatchers.main + job
+
     private var data: List<Photo> = listOf()
 
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
         super.onAttachedToRecyclerView(recyclerView)
-        disposables = CompositeDisposable()
+        job = Job()
     }
 
     fun updateData(updatedPhotos: List<Photo>) {
-        Single.create<DiffUtil.DiffResult> {
-            val diffCallback = PhotoModelDiffCallback(this.data, updatedPhotos)
-            val diffResult = DiffUtil.calculateDiff(diffCallback)
-            it.onSuccess(diffResult)
-        }.subscribeOn(Schedulers.computation())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                        { diffResult ->
-                            data = updatedPhotos
-                            diffResult.dispatchUpdatesTo(this@PhotoAdapter)
-                        }
-                )
-                .also { disposables.add(it) }
+        launch {
+            createDiff(this@PhotoAdapter.data, updatedPhotos)
+        }
+    }
+
+    private suspend fun createDiff(currentData: List<Photo>, updatedData: List<Photo>) {
+        val diffCallback = PhotoModelDiffCallback(currentData, updatedData)
+        val diffResult = DiffUtil.calculateDiff(diffCallback)
+
+        withContext(dispatchers.main) {
+            data = updatedData
+            diffResult.dispatchUpdatesTo(this@PhotoAdapter)
+        }
     }
 
     override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
-        disposables.dispose()
+        job.cancel()
         super.onDetachedFromRecyclerView(recyclerView)
     }
 

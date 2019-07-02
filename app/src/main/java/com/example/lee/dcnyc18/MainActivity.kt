@@ -14,6 +14,9 @@ import com.example.lee.dcnyc18.ui.PhotoCellIntentHandler
 import com.example.lee.dcnyc18.ui.PhotoListViewModel
 import dagger.android.AndroidInjection
 import javax.inject.Inject
+import android.nfc.tech.MifareUltralight.PAGE_SIZE
+import android.support.v7.widget.GridLayoutManager
+
 
 // This demo app:
 // fetches trending photos from unsplash
@@ -28,7 +31,7 @@ import javax.inject.Inject
 class MainActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: PhotoAdapter
-    private lateinit var layoutManager: StaggeredGridLayoutManager
+    private lateinit var layoutManager: GridLayoutManager //StaggeredGridLayoutManager
     private lateinit var listIntentHandler: ListIntentHandler
     private lateinit var photoCellIntentHandler: PhotoCellIntentHandler
 
@@ -38,7 +41,14 @@ class MainActivity : AppCompatActivity() {
                 super.onScrolled(recyclerView, dx, dy)
 
                 val visibleItemCount = layoutManager.childCount
-                if (visibleItemCount + 4 >= adapter.itemCount) {
+                val totalItemCount = layoutManager.itemCount
+                val firstVisibleItemPosition = layoutManager.findFirstCompletelyVisibleItemPosition()
+
+                println("debugging : layoutCount:" + layoutManager.childCount + ",  adapterCount:" + adapter.itemCount + ", firstVisibleItemPosition:" + firstVisibleItemPosition + ", visibleCount:" + visibleItemCount+ ", totalItemCount:" + totalItemCount)
+
+                if (visibleItemCount + firstVisibleItemPosition >= totalItemCount
+                        && firstVisibleItemPosition >= 0
+                        && totalItemCount >= PAGE_SIZE) {
                     listIntentHandler.onReachedEndOfData()
                 }
             }
@@ -70,7 +80,7 @@ class MainActivity : AppCompatActivity() {
     private fun initializeUi() {
         adapter = PhotoAdapter(photoCellIntentHandler)
 
-        layoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
+        layoutManager = GridLayoutManager(this, 2)//StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
 
         recyclerView = findViewById<RecyclerView>(R.id.activity_main_rv).apply {
             layoutManager = this@MainActivity.layoutManager

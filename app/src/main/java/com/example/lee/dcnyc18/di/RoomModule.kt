@@ -6,6 +6,7 @@ import com.example.lee.dcnyc18.db.APPLICATION_NAME
 import com.example.lee.dcnyc18.db.AppDatabase
 import com.example.lee.dcnyc18.db.PhotoDao
 import com.example.lee.dcnyc18.db.PhotoDataSource
+import com.example.lee.dcnyc18.util.DCNYDispatchers
 import dagger.Module
 import dagger.Provides
 import javax.inject.Singleton
@@ -34,8 +35,14 @@ class RoomModule(application: Application) {
 
     @Singleton
     @Provides
-    internal fun photoDataSource(photoDao: PhotoDao): PhotoDataSource {
-        return PhotoDataSource(photoDao)
+    internal fun photoDataSource(photoDao: PhotoDao, dispatachers: DCNYDispatchers): PhotoDataSource {
+        return PhotoDataSource(photoDao, dispatachers)
+    }
+
+    @Singleton
+    @Provides
+    internal fun providesDispatchers(): DCNYDispatchers {
+        return DCNYDispatchers()
     }
 
 }
